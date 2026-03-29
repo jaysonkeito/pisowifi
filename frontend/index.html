@@ -1,134 +1,131 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>CIT Piso WiFi</title>
-<link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>PISO WIFI</title>
+    <link rel="stylesheet" href="style.css"/>
+</head>
 <body>
-    <div class="bg-orbs">
-    <div class="orb orb1"></div><div class="orb orb2"></div><div class="orb orb3"></div>
-    </div>
 
-    <!-- Restricted overlay -->
-    <div class="restricted-overlay" id="restrictedOverlay">
+<div class="bg-orbs">
+    <div class="orb orb1"></div><div class="orb orb2"></div><div class="orb orb3"></div>
+</div>
+
+<!-- Restricted overlay -->
+<div class="restricted-overlay" id="restrictedOverlay">
     <div style="font-size:3.5rem">🔒</div>
     <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:1.3rem;color:white">Access Restricted</div>
     <div style="font-size:0.86rem;color:rgba(255,255,255,0.7);max-width:300px;line-height:1.6">
         Your 3-minute free window is reserved for payment only. All other sites are blocked by the router.
     </div>
     <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:2.8rem;color:#F97316" id="overlayFreeVal">3:00</div>
-    <button class="btn btn-gcash btn-sm" onclick="closeRestricted()">← Back to Payment</button>
-    </div>
+    <button class="btn btn-gcash btn-sm" id="backToPaymentBtn">← Back to Payment</button>
+</div>
 
-    <!-- Header -->
-    <div class="header">
+<!-- Header -->
+<div class="header">
     <div class="logo-ring">
         <svg viewBox="0 0 24 24"><path d="M1 6.5C1 6.5 6 2 12 2C18 2 23 6.5 23 6.5L20.5 9C20.5 9 16.5 5.5 12 5.5C7.5 5.5 3.5 9 3.5 9L1 6.5ZM5.5 11L8 13.5C8 13.5 9.5 12 12 12C14.5 12 16 13.5 16 13.5L18.5 11C18.5 11 15.5 8.5 12 8.5C8.5 8.5 5.5 11 5.5 11ZM10 16C10 14.9 10.9 14 12 14C13.1 14 14 14.9 14 16C14 17.7 12 20 12 20C12 20 10 17.7 10 16Z"/></svg>
     </div>
-    <div class="brand-name">CIT Piso WiFi</div>
-    <div class="brand-sub">NORSU-BSC CIT Department</div>
-    </div>
+    <div class="brand-name">PISO WIFI</div>
+    <div class="brand-sub">Fast • Reliable • Affordable</div>
+</div>
 
-    <div class="status-bar">
+<div class="status-bar">
     <div class="status-pill">
         <div class="dot"></div>
-        Connected to <strong style="margin:0 4px;color:var(--text)">CIT-PisoWiFi</strong> · Awaiting Payment
+        Connected to <strong>PISO-WIFI</strong> · Awaiting Payment
     </div>
-    </div>
+</div>
 
-    <!-- ════════════ HOME ════════════ -->
-    <div class="screen active" id="screen-home">
-
-    
-
+<!-- HOME SCREEN -->
+<div class="screen active" id="screen-home">
     <div class="card">
         <div class="card-title">👋 Welcome!</div>
-        <div class="card-desc">You are connected to CIT Piso WiFi. Choose a payment method to get internet access.</div>
+        <div class="card-desc">You are connected to PISO WIFI. Choose a payment method to get internet access.</div>
     </div>
 
     <div class="card">
         <div class="card-title" style="margin-bottom:14px">Choose Payment Method</div>
-        <button class="method-btn gcash-btn" onclick="startGcash()">
-        <div class="micon gcash">💳</div>
-        <div>
-            <div class="mlabel">GCash / Online Pay</div>
-            <div class="mhint">Secured by PayMongo · 3 min free window</div>
-        </div>
-        <div class="marrow">›</div>
+        <button class="method-btn gcash-btn" id="gcashBtn">
+            <div class="micon gcash">💳</div>
+            <div>
+                <div class="mlabel">GCash / Online Pay</div>
+                <div class="mhint">Secured by PayMongo · 3 min free window</div>
+            </div>
+            <div class="marrow">›</div>
         </button>
-        <button class="method-btn coin-btn" onclick="goTo('screen-coin')">
-        <div class="micon coin">🪙</div>
-        <div>
-            <div class="mlabel">Coin Slot</div>
-            <div class="mhint">Insert any coins · Time accumulates</div>
-        </div>
-        <div class="marrow">›</div>
+        <button class="method-btn coin-btn" id="coinBtn">
+            <div class="micon coin">🪙</div>
+            <div>
+                <div class="mlabel">Coin Slot</div>
+                <div class="mhint">Insert any coins · Time accumulates</div>
+            </div>
+            <div class="marrow">›</div>
         </button>
     </div>
 
     <div class="card" style="background:var(--blue-light);border:none;box-shadow:none">
         <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:0.88rem;color:var(--blue);margin-bottom:10px">📶 WiFi Rates</div>
         <ul class="rate-list">
-        <li><span style="display:flex;align-items:center;gap:8px"><div class="rate-pill">₱1</div>1 Peso</span><span style="font-weight:600;color:var(--blue)">10 minutes</span></li>
-        <li><span style="display:flex;align-items:center;gap:8px"><div class="rate-pill">₱5</div>5 Pesos</span><span style="font-weight:600;color:var(--blue)">2 hours</span></li>
-        <li><span style="display:flex;align-items:center;gap:8px"><div class="rate-pill">₱10</div>10 Pesos</span><span style="font-weight:600;color:var(--blue)">5 hours</span></li>
-        <li><span style="display:flex;align-items:center;gap:8px"><div class="rate-pill">₱20</div>20 Pesos</span><span style="font-weight:600;color:var(--blue)">12 hours</span></li>
+            <li><span style="display:flex;align-items:center;gap:8px"><div class="rate-pill">₱1</div>1 Peso</span><span style="font-weight:600;color:var(--blue)">10 minutes</span></li>
+            <li><span style="display:flex;align-items:center;gap:8px"><div class="rate-pill">₱5</div>5 Pesos</span><span style="font-weight:600;color:var(--blue)">2 hours</span></li>
+            <li><span style="display:flex;align-items:center;gap:8px"><div class="rate-pill">₱10</div>10 Pesos</span><span style="font-weight:600;color:var(--blue)">5 hours</span></li>
+            <li><span style="display:flex;align-items:center;gap:8px"><div class="rate-pill">₱20</div>20 Pesos</span><span style="font-weight:600;color:var(--blue)">12 hours</span></li>
         </ul>
     </div>
-    </div>
+</div>
 
-    <!-- ════════════ GCASH — SELECT PLAN ════════════ -->
-    <div class="screen" id="screen-gcash-rates">
-    <button class="back-btn" onclick="cancelGcash()">← Back</button>
+<!-- GCASH RATES SCREEN -->
+<div class="screen" id="screen-gcash-rates">
+    <button class="back-btn" id="backToHomeBtn">← Back</button>
 
     <div class="free-banner">
         <div style="font-size:1.35rem;flex-shrink:0">⏱</div>
         <div>
-        <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:0.87rem">Free Payment Window</div>
-        <div style="font-size:0.73rem;opacity:0.9">Only payment pages allowed · Other sites blocked</div>
+            <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:0.87rem">Free Payment Window</div>
+            <div style="font-size:0.73rem;opacity:0.9">Only payment pages allowed · Other sites blocked</div>
         </div>
         <div class="free-val" id="freeVal1">3:00</div>
     </div>
 
     <div class="card">
         <div class="steps">
-        <div class="step active">1</div>
-        <div class="step-line"></div>
-        <div class="step">2</div>
-        <div class="step-line"></div>
-        <div class="step">3</div>
+            <div class="step active">1</div>
+            <div class="step-line"></div>
+            <div class="step">2</div>
+            <div class="step-line"></div>
+            <div class="step">3</div>
         </div>
         <div class="card-title">Select a WiFi Plan</div>
         <div class="card-desc">Pick how long you want internet access.</div>
         <div class="rates-grid">
-        <div class="rate-card" onclick="selectRate(this,1,10,'10 min')">
-            <div class="rate-amt">₱1</div>
-            <div class="rate-time">10 minutes</div>
-        </div>
-        <div class="rate-card" onclick="selectRate(this,5,120,'2 hrs')">
-            <div class="rate-amt">₱5</div>
-            <div class="rate-time">2 hours</div>
-            <div class="rate-badge">Popular</div>
-        </div>
-        <div class="rate-card" onclick="selectRate(this,10,300,'5 hrs')">
-            <div class="rate-amt">₱10</div>
-            <div class="rate-time">5 hours</div>
-        </div>
-        <div class="rate-card" onclick="selectRate(this,20,720,'12 hrs')">
-            <div class="rate-amt">₱20</div>
-            <div class="rate-time">12 hours</div>
-            <div class="rate-badge">Best Value</div>
-        </div>
+            <div class="rate-card" data-pesos="1" data-minutes="10" data-label="10 min">
+                <div class="rate-amt">₱1</div>
+                <div class="rate-time">10 minutes</div>
+            </div>
+            <div class="rate-card" data-pesos="5" data-minutes="120" data-label="2 hrs">
+                <div class="rate-amt">₱5</div>
+                <div class="rate-time">2 hours</div>
+                <div class="rate-badge">Popular</div>
+            </div>
+            <div class="rate-card" data-pesos="10" data-minutes="300" data-label="5 hrs">
+                <div class="rate-amt">₱10</div>
+                <div class="rate-time">5 hours</div>
+            </div>
+            <div class="rate-card" data-pesos="20" data-minutes="720" data-label="12 hrs">
+                <div class="rate-amt">₱20</div>
+                <div class="rate-time">12 hours</div>
+                <div class="rate-badge">Best Value</div>
+            </div>
         </div>
     </div>
-    <button class="btn btn-gcash" id="proceedBtn" disabled onclick="proceedToPayment()">
-        Continue to GCash Payment →
-    </button>
-    </div>
+    <button class="btn btn-gcash" id="proceedBtn" disabled>Continue to GCash Payment →</button>
+</div>
 
-    <!-- ════════════ GCASH — PAY ════════════ -->
-    <div class="screen" id="screen-gcash-pay">
+<!-- ════════════ GCASH — PAY ════════════ -->
+<div class="screen" id="screen-gcash-pay">
     <button class="back-btn" onclick="goTo('screen-gcash-rates')">← Change Plan</button>
 
     <div class="free-banner">
@@ -198,10 +195,10 @@
         </div>
         </div>
     </div>
-    </div>
+</div>
 
-    <!-- ════════════ VERIFYING ════════════ -->
-    <div class="screen" id="screen-verifying">
+<!-- ════════════ VERIFYING ════════════ -->
+<div class="screen" id="screen-verifying">
     <div class="card" style="text-align:center;padding:44px 20px">
         <div style="font-size:2.8rem;margin-bottom:14px">🔍</div>
         <div class="card-title" style="text-align:center">Verifying Payment</div>
@@ -234,10 +231,10 @@
         <span>💡</span>
         <span>Session ends automatically at zero. Tap "Add More Time" — it will stack onto your current session.</span>
     </div>
-    </div>
+</div>
 
-    <!-- ════════════ COIN SLOT ════════════ -->
-    <div class="screen" id="screen-coin">
+<!-- ════════════ COIN SLOT ════════════ -->
+<div class="screen" id="screen-coin">
     <button class="back-btn" onclick="resetCoin();goTo('screen-home')">← Back</button>
 
     <div class="card">
@@ -297,10 +294,10 @@
         Insert Invalid Coin
         </button>
     </div>
-    </div>
+</div>
 
-    <!-- ════════════ FAILED ════════════ -->
-    <div class="screen" id="screen-failed">
+<!-- ════════════ FAILED ════════════ -->
+<div class="screen" id="screen-failed">
     <div class="card" style="text-align:center;padding:40px 20px">
         <div style="font-size:3rem;margin-bottom:12px">❌</div>
         <div class="card-title" style="text-align:center;color:var(--red)">Payment Failed</div>
@@ -310,8 +307,8 @@
         <button class="btn btn-outline btn-sm" onclick="cancelGcash()">← Home</button>
         </div>
     </div>
-    </div>
-</body>
+</div>
 
 <script src="app.js"></script>
+</body>
 </html>

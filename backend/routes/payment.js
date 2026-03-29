@@ -5,13 +5,13 @@ const router = express.Router();
 const PM_BASE = 'https://api.paymongo.com/v1';
 const SECRET = process.env.PAYMONGO_SECRET_KEY;
 
-
+// Only show warning if truly missing (after server fully starts)
 if (!SECRET) {
-  console.error('❌ PAYMONGO_SECRET_KEY is missing in .env file');
+  console.warn('⚠️ PAYMONGO_SECRET_KEY is missing');
 } else if (!SECRET.startsWith('sk_test_') && !SECRET.startsWith('sk_live_')) {
-  console.warn('⚠️ PAYMONGO_SECRET_KEY does not look like a valid PayMongo key (should start with sk_test_ or sk_live_)');
+  console.warn('⚠️ PAYMONGO_SECRET_KEY format looks incorrect');
 } else {
-  console.log('✅ PayMongo Secret Key loaded successfully');
+  console.log('✅ PayMongo Secret Key is ready for use');
 }
 
 const headers = {

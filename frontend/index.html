@@ -17,24 +17,24 @@
     <div class="orb orb3"></div>
 </div>
 
-<!-- Restricted overlay — shown when user tries to leave during free window -->
+<!-- Restricted overlay (shown when user tries to leave during GCash free window) -->
 <div class="restricted-overlay" id="restrictedOverlay">
     <div style="font-size:3.5rem">🔒</div>
     <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:1.3rem;color:white">Access Restricted</div>
-    <div style="font-size:0.86rem;color:rgba(255,255,255,0.7);max-width:300px;line-height:1.6">
-        Your 3-minute free window is for payment only. Please complete your GCash payment.
+    <div style="font-size:0.86rem;color:rgba(255,255,255,0.7);max-width:300px;line-height:1.7">
+        Your 3-minute free window is for GCash payment only.<br/>Other sites are blocked by the router.
     </div>
     <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:2.8rem;color:#F97316" id="overlayFreeVal">3:00</div>
     <button class="btn btn-gcash btn-sm" id="backToPaymentBtn">← Back to Payment</button>
 </div>
 
-<!-- Header -->
+<!-- ── Header ─────────────────────────────────── -->
 <div class="header">
     <div class="logo-ring">
         <svg viewBox="0 0 24 24"><path d="M1 6.5C1 6.5 6 2 12 2C18 2 23 6.5 23 6.5L20.5 9C20.5 9 16.5 5.5 12 5.5C7.5 5.5 3.5 9 3.5 9L1 6.5ZM5.5 11L8 13.5C8 13.5 9.5 12 12 12C14.5 12 16 13.5 16 13.5L18.5 11C18.5 11 15.5 8.5 12 8.5C8.5 8.5 5.5 11 5.5 11ZM10 16C10 14.9 10.9 14 12 14C13.1 14 14 14.9 14 16C14 17.7 12 20 12 20C12 20 10 17.7 10 16Z"/></svg>
     </div>
     <div class="brand-name">CIT Piso WiFi</div>
-    <div class="brand-sub">NORSU-BSC CIT</div>
+    <div class="brand-sub">Cebu Institute of Technology</div>
 </div>
 
 <div class="status-bar">
@@ -44,13 +44,13 @@
     </div>
 </div>
 
-<!-- ════════════════════════════════════
-     SCREEN: HOME
-════════════════════════════════════ -->
+<!-- ══════════════════════════════════════════
+     HOME
+══════════════════════════════════════════ -->
 <div class="screen active" id="screen-home">
     <div class="card">
         <div class="card-title">👋 Welcome!</div>
-        <div class="card-desc">You are connected to CIT Piso WiFi. Choose how you'd like to pay for internet access.</div>
+        <div class="card-desc">Connected to CIT Piso WiFi. Choose how you want to pay for internet access.</div>
     </div>
 
     <div class="card">
@@ -58,9 +58,8 @@
 
         <button class="method-btn gcash-btn" id="gcashBtn">
             <div class="micon gcash">
-                <!-- GCash G logo -->
-                <svg viewBox="0 0 36 36" width="28" height="28" fill="none">
-                    <circle cx="18" cy="18" r="18" fill="white" fill-opacity="0.15"/>
+                <svg viewBox="0 0 36 36" width="26" height="26" fill="none">
+                    <circle cx="18" cy="18" r="18" fill="rgba(255,255,255,0.18)"/>
                     <text x="18" y="24" text-anchor="middle" font-size="20" font-weight="900" font-family="Arial" fill="white">G</text>
                 </svg>
             </div>
@@ -75,189 +74,131 @@
             <div class="micon coin">🪙</div>
             <div>
                 <div class="mlabel">Insert Coin</div>
-                <div class="mhint">Drop any coin · Time accumulates automatically</div>
+                <div class="mhint">Drop coins into the slot · Time stacks up</div>
             </div>
             <div class="marrow">›</div>
         </button>
     </div>
 
-    <!-- Rates reference card -->
     <div class="card rates-ref-card">
         <div class="rates-ref-title">📶 WiFi Rates</div>
         <ul class="rate-list">
-            <li>
-                <span class="rate-list-left"><div class="rate-pill">₱1</div> 1 Peso</span>
-                <span class="rate-list-right">10 minutes</span>
-            </li>
-            <li>
-                <span class="rate-list-left"><div class="rate-pill">₱5</div> 5 Pesos</span>
-                <span class="rate-list-right">2 hours</span>
-            </li>
-            <li>
-                <span class="rate-list-left"><div class="rate-pill">₱10</div> 10 Pesos</span>
-                <span class="rate-list-right">5 hours</span>
-            </li>
-            <li>
-                <span class="rate-list-left"><div class="rate-pill">₱20</div> 20 Pesos</span>
-                <span class="rate-list-right">12 hours</span>
-            </li>
+            <li><span class="rl-left"><div class="rate-pill">₱1</div>1 Peso</span><span class="rl-right">10 minutes</span></li>
+            <li><span class="rl-left"><div class="rate-pill">₱5</div>5 Pesos</span><span class="rl-right">2 hours</span></li>
+            <li><span class="rl-left"><div class="rate-pill">₱10</div>10 Pesos</span><span class="rl-right">5 hours</span></li>
+            <li><span class="rl-left"><div class="rate-pill">₱20</div>20 Pesos</span><span class="rl-right">12 hours</span></li>
         </ul>
     </div>
 </div>
 
-<!-- ════════════════════════════════════
-     SCREEN: GCASH QR PAYMENT
-     Step 1 → pick rate or enter amount
-     Step 2 → scan QR / open GCash app
-     Step 3 → enter reference number
-════════════════════════════════════ -->
+<!-- ══════════════════════════════════════════
+     GCASH QR PAYMENT  (3 steps in one screen)
+══════════════════════════════════════════ -->
 <div class="screen" id="screen-gcash">
     <button class="back-btn" id="gcashBackBtn">← Back</button>
 
-    <!-- 3-min free window countdown -->
+    <!-- Free window countdown -->
     <div class="free-banner">
         <div class="free-banner-icon">⏱</div>
         <div>
             <div class="free-banner-title">Free Payment Window</div>
-            <div class="free-banner-sub">GCash app is allowed · Other sites blocked</div>
+            <div class="free-banner-sub">GCash app allowed · Other sites blocked</div>
         </div>
         <div class="free-val" id="freeValGcash">3:00</div>
     </div>
 
-    <!-- ── Step 1: Choose rate or enter custom amount ── -->
+    <!-- Step 1: Select amount -->
     <div class="card" id="gcashStep1">
         <div class="steps">
-            <div class="step active" id="gs1">1</div>
-            <div class="step-line" id="gsl1"></div>
-            <div class="step" id="gs2">2</div>
-            <div class="step-line" id="gsl2"></div>
-            <div class="step" id="gs3">3</div>
+            <div class="step active" id="st1">1</div>
+            <div class="step-line" id="sl1"></div>
+            <div class="step" id="st2">2</div>
+            <div class="step-line" id="sl2"></div>
+            <div class="step" id="st3">3</div>
         </div>
-
         <div class="card-title">Select Amount to Pay</div>
         <div class="card-desc">Pick a plan or type a custom amount (₱1 minimum).</div>
 
-        <!-- Quick rate cards -->
         <div class="rates-grid">
-            <div class="rate-card gcash-rate-card" data-pesos="1" data-minutes="10" data-label="10 min">
-                <div class="rate-amt">₱1</div>
-                <div class="rate-time">10 minutes</div>
-            </div>
-            <div class="rate-card gcash-rate-card" data-pesos="5" data-minutes="120" data-label="2 hrs">
-                <div class="rate-amt">₱5</div>
-                <div class="rate-time">2 hours</div>
-                <div class="rate-badge">Popular</div>
-            </div>
-            <div class="rate-card gcash-rate-card" data-pesos="10" data-minutes="300" data-label="5 hrs">
-                <div class="rate-amt">₱10</div>
-                <div class="rate-time">5 hours</div>
-            </div>
-            <div class="rate-card gcash-rate-card" data-pesos="20" data-minutes="720" data-label="12 hrs">
-                <div class="rate-amt">₱20</div>
-                <div class="rate-time">12 hours</div>
-                <div class="rate-badge">Best Value</div>
-            </div>
+            <div class="rate-card gcash-rate" data-pesos="1"  data-minutes="10"  data-label="10 min"><div class="rate-amt">₱1</div><div class="rate-time">10 minutes</div></div>
+            <div class="rate-card gcash-rate" data-pesos="5"  data-minutes="120" data-label="2 hrs"><div class="rate-amt">₱5</div><div class="rate-time">2 hours</div><div class="rate-badge">Popular</div></div>
+            <div class="rate-card gcash-rate" data-pesos="10" data-minutes="300" data-label="5 hrs"><div class="rate-amt">₱10</div><div class="rate-time">5 hours</div></div>
+            <div class="rate-card gcash-rate" data-pesos="20" data-minutes="720" data-label="12 hrs"><div class="rate-amt">₱20</div><div class="rate-time">12 hours</div><div class="rate-badge">Best Value</div></div>
         </div>
 
-        <!-- Divider -->
         <div class="divider">or enter custom amount</div>
 
-        <!-- Custom amount input -->
         <div class="custom-amount-wrap">
             <span class="peso-sign">₱</span>
-            <input
-                type="number"
-                id="customAmountInput"
-                class="custom-amount-input"
-                placeholder="e.g. 15"
-                min="1"
-                step="1"
-            />
+            <input type="number" id="customAmountInput" class="custom-amount-input" placeholder="e.g. 15" min="1" step="1"/>
         </div>
         <div class="custom-amount-preview" id="customAmountPreview"></div>
 
-        <!-- Open GCash button — enabled only when amount is set -->
         <button class="btn btn-gcash" id="openGcashBtn" disabled style="margin-top:16px">
             📱 Open GCash App to Pay
         </button>
     </div>
 
-    <!-- ── Step 2: QR Code display ── -->
+    <!-- Step 2: QR Code -->
     <div class="card" id="gcashStep2" style="display:none">
         <div class="steps">
-            <div class="step done">✓</div>
-            <div class="step-line done"></div>
-            <div class="step active" id="gs2b">2</div>
-            <div class="step-line" id="gsl2b"></div>
-            <div class="step" id="gs3b">3</div>
+            <div class="step done">✓</div><div class="step-line done"></div>
+            <div class="step active">2</div><div class="step-line"></div>
+            <div class="step">3</div>
         </div>
+        <div class="card-title">Scan &amp; Pay via GCash</div>
+        <div class="card-desc">Send exactly <strong id="qrAmountLabel">₱—</strong> to the QR below.</div>
 
-        <div class="card-title">Scan & Pay via GCash</div>
-        <div class="card-desc">Send exactly <strong id="qrAmountLabel">₱—</strong> to the QR below, then enter your reference number.</div>
-
-        <!-- QR Code -->
-        <!-- ⚠️ OPERATOR: Replace the <img> src with your actual GCash QR image file.
-             Place the image in /frontend/ and update the src below.
-             Example: <img src="gcash-qr.png" .../>
-        -->
+        <!-- QR Code — place gcash-qr.jpg in /frontend/ -->
         <div class="qr-wrapper">
             <div class="qr-scan-label">Scan with GCash App</div>
             <div class="qr-frame">
-                <!-- Placeholder QR — replace with your real GCash QR image -->
-                <img src="GCash-MyQR-30032026065007.jpg" alt="GCash QR Code" class="qr-img"
-                     onerror="this.style.display='none';document.getElementById('qrFallback').style.display='flex'"/>
-                
+                <img src="gcash-qr.jpg" alt="GCash QR Code" class="qr-img"
+                     onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"/>
+                <div class="qr-missing">
+                    <div style="font-size:2rem">📷</div>
+                    <div style="font-size:0.78rem;color:#DC2626;text-align:center;line-height:1.5">
+                        Place your GCash QR image<br/>as <code>gcash-qr.jpg</code> in /frontend/
+                    </div>
+                </div>
             </div>
-            <!-- Operator: update this with your GCash name and number -->
             <div class="qr-account">
-                <div class="qr-account-name" id="qrAccountName">Jayson Francisco</div>
+                <!-- ⚠️ UPDATE: Replace with your GCash name and number -->
+                <div class="qr-account-name">Jayson Francisco</div>
                 <div class="qr-account-number">0953-455-9021</div>
             </div>
         </div>
 
-        <!-- Amount to send highlight -->
         <div class="amount-to-send">
-            <div class="amount-to-send-label">Send exactly</div>
-            <div class="amount-to-send-val" id="amountToSend">₱—</div>
-            <div class="amount-to-send-time" id="amountToSendTime">— of internet access</div>
+            <div class="ats-label">Send exactly</div>
+            <div class="ats-val" id="amountToSend">₱—</div>
+            <div class="ats-time" id="amountToSendTime">— of internet access</div>
         </div>
 
         <!-- Open GCash deep link -->
-        <a href="gcash://send" class="btn btn-gcash" style="text-decoration:none;margin-bottom:10px" id="deepLinkBtn">
+        <a href="gcash://send" class="btn btn-gcash" id="deepLinkBtn" style="text-decoration:none;margin-bottom:10px">
             📱 Open GCash App
         </a>
-
         <button class="btn btn-outline" id="showRefInputBtn">
             ✅ I've Sent the Payment
         </button>
     </div>
 
-    <!-- ── Step 3: Reference number ── -->
+    <!-- Step 3: Reference number -->
     <div class="card" id="gcashStep3" style="display:none">
         <div class="steps">
-            <div class="step done">✓</div>
-            <div class="step-line done"></div>
-            <div class="step done">✓</div>
-            <div class="step-line done"></div>
+            <div class="step done">✓</div><div class="step-line done"></div>
+            <div class="step done">✓</div><div class="step-line done"></div>
             <div class="step active">3</div>
         </div>
-
         <div class="card-title">Enter Reference Number</div>
-        <div class="card-desc">
-            Open GCash → <strong>Inbox</strong> → tap your latest transaction → copy the <strong>Reference No.</strong>
-        </div>
+        <div class="card-desc">GCash app → <strong>Inbox</strong> → tap your transaction → copy the <strong>Reference No.</strong></div>
 
-        <div class="ref-wrap" style="margin-top:14px">
-            <input
-                type="text"
-                id="refInput"
-                class="ref-input"
-                placeholder="e.g. GC20241234567890"
-                maxlength="30"
-                autocomplete="off"
-                autocapitalize="characters"
-                spellcheck="false"
-            />
+        <div style="margin-top:14px">
+            <input type="text" id="refInput" class="ref-input"
+                   placeholder="e.g. GC20241234567890"
+                   maxlength="30" autocomplete="off"
+                   autocapitalize="characters" spellcheck="false"/>
             <div class="ref-error" id="refError" style="display:none">
                 ⚠️ Please enter a valid reference number (at least 6 characters).
             </div>
@@ -274,17 +215,17 @@
     </div>
 </div>
 
-<!-- ════════════════════════════════════
-     SCREEN: COIN SLOT
-════════════════════════════════════ -->
+<!-- ══════════════════════════════════════════
+     COIN SLOT
+══════════════════════════════════════════ -->
 <div class="screen" id="screen-coin">
     <button class="back-btn" onclick="resetCoin(); goTo('screen-home')">← Back</button>
 
     <div class="card">
         <div class="card-title">🪙 Insert Coin</div>
-        <div class="card-desc">Drop any coin — time accumulates automatically. Insert as many as you want, then press <strong>Connect</strong>.</div>
+        <div class="card-desc">Drop any coin — time stacks automatically. Insert as many as you want, then press <strong>Connect</strong>.</div>
 
-        <!-- Live total display -->
+        <!-- Live total -->
         <div class="coin-display">
             <div class="coin-display-label">Total Inserted</div>
             <div class="coin-total-val" id="coinTotalVal">₱0</div>
@@ -301,23 +242,23 @@
             </div>
         </div>
 
-        <!-- Coin history log -->
+        <!-- Coin history -->
         <div id="coinLogWrap" style="display:none" class="coin-log-wrap">
             <div class="coin-log-title">Coin History</div>
             <div class="coin-log" id="coinLog"></div>
         </div>
 
-        <!-- Invalid coin notice -->
+        <!-- Invalid notice -->
         <div id="invalidNotice" style="display:none;margin-top:8px">
             <div class="alert a-error" style="margin-bottom:0">
                 <span>🚫</span>
-                <span>Invalid coin detected and ejected. Please insert a valid Philippine peso coin (₱1, ₱5, ₱10, ₱20).</span>
+                <span>Invalid coin detected and ejected. Please use a valid Philippine peso coin.</span>
             </div>
         </div>
 
-        <!-- Connect / cancel buttons -->
+        <!-- Connect / eject buttons -->
         <div id="coinConnectWrap" style="display:none;margin-top:14px">
-            <button class="btn btn-coin" onclick="connectWithCoin()">
+            <button class="btn btn-coin" id="coinConnectBtn" onclick="connectWithCoin()">
                 🚀 Connect Now · <span id="coinConnectLabel">—</span>
             </button>
             <button class="btn btn-danger-outline btn-sm" style="margin-top:8px;width:100%" onclick="resetCoin()">
@@ -326,23 +267,23 @@
         </div>
     </div>
 
-    <!-- WiFi rates reference -->
+    <!-- Rates reference -->
     <div class="card rates-ref-card">
         <div class="rates-ref-title">📶 WiFi Rates</div>
         <ul class="rate-list">
-            <li><span class="rate-list-left"><div class="rate-pill">₱1</div> 1 Peso</span><span class="rate-list-right">10 minutes</span></li>
-            <li><span class="rate-list-left"><div class="rate-pill">₱5</div> 5 Pesos</span><span class="rate-list-right">2 hours</span></li>
-            <li><span class="rate-list-left"><div class="rate-pill">₱10</div> 10 Pesos</span><span class="rate-list-right">5 hours</span></li>
-            <li><span class="rate-list-left"><div class="rate-pill">₱20</div> 20 Pesos</span><span class="rate-list-right">12 hours</span></li>
+            <li><span class="rl-left"><div class="rate-pill">₱1</div>1 Peso</span><span class="rl-right">10 minutes</span></li>
+            <li><span class="rl-left"><div class="rate-pill">₱5</div>5 Pesos</span><span class="rl-right">2 hours</span></li>
+            <li><span class="rl-left"><div class="rate-pill">₱10</div>10 Pesos</span><span class="rl-right">5 hours</span></li>
+            <li><span class="rl-left"><div class="rate-pill">₱20</div>20 Pesos</span><span class="rl-right">12 hours</span></li>
         </ul>
     </div>
 
-    <!-- Simulator (dev/testing only) -->
-    <div class="card" style="background:#F8FAFC;border:1.5px dashed var(--border);box-shadow:none">
-        <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:0.85rem;margin-bottom:10px">🎮 Simulate Coin Insert</div>
+    <!-- Dev simulator -->
+    <div class="card sim-card">
+        <div class="sim-title">🎮 Simulate Coin Insert <span class="sim-badge">Dev Only</span></div>
         <div class="alert a-info" style="margin-bottom:10px">
             <span>ℹ️</span>
-            <span>In production, the Arduino sends a <code>POST /api/coin</code> when a real coin is detected.</span>
+            <span>On the real machine, the Orange Pi GPIO reader sends coins automatically. These buttons are for testing only.</span>
         </div>
         <div class="sim-grid">
             <button class="btn btn-outline btn-sm" onclick="insertCoin(1)">Insert ₱1</button>
@@ -356,9 +297,9 @@
     </div>
 </div>
 
-<!-- ════════════════════════════════════
-     SCREEN: CONNECTED (Session active)
-════════════════════════════════════ -->
+<!-- ══════════════════════════════════════════
+     CONNECTED (active session)
+══════════════════════════════════════════ -->
 <div class="screen" id="screen-connected">
     <div class="card" style="text-align:center">
         <div class="success-icon">✓</div>
@@ -370,20 +311,19 @@
             <div class="timer-lbl">Remaining</div>
         </div>
 
-        <div class="session-info-box">
-            <div class="session-info-label">Session</div>
-            <div class="session-info-plan" id="sessInfo1">—</div>
-            <div class="session-info-method" id="sessInfo2">—</div>
+        <div class="sess-info-box">
+            <div class="sess-info-label">Session</div>
+            <div class="sess-info-plan"  id="sessInfo1">—</div>
+            <div class="sess-info-method" id="sessInfo2">—</div>
         </div>
 
         <button class="btn btn-outline" style="margin-top:14px" onclick="goTo('screen-home')">
             + Add More Time
         </button>
     </div>
-
     <div class="alert a-info">
         <span>💡</span>
-        <span>Session ends automatically at zero. Adding more time stacks on top of remaining time.</span>
+        <span>Session ends automatically at zero. Adding more time stacks onto your remaining time.</span>
     </div>
 </div>
 

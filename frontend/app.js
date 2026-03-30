@@ -1,43 +1,50 @@
-// =============================================
-// CIT PISO WIFI — Frontend Logic
-// GCash QR (static) + Coin Slot only
-// No PayMongo dependency
-// =============================================
+// ============================================================
+// CIT Piso WiFi — Frontend Logic
+// Hardware: Orange Pi One + NAEK WifiSoft DIY Kit
+//
+// COIN SLOT:
+//   Real coins → Orange Pi GPIO → gpio-reader.py → POST /api/coin
+//   The portal shows the session counter after backend confirms.
+//   Simulator buttons (dev) also call POST /api/coin directly.
+//
+// GCASH QR:
+//   User scans QR → pays any amount → enters ref number →
+//   Frontend POSTs to POST /api/gcash → backend grants via WifiSoft
+//
+// SESSION SYNC:
+//   Every 5s the portal polls GET /api/session to stay in sync
+//   with the backend — so if the page refreshes, the timer
+//   picks up where it left off.
+// ============================================================
 
-// ── Rate map: pesos → minutes ────────────────
+const API = '/api';
+
+// ── Rate map ──────────────────────────────────
 const RATES = { 1: 10, 5: 120, 10: 300, 20: 720 };
-
-function pesoToMins(p) {
-  // Snap to known rates; otherwise proportional (₱1 = 10 min base)
-  return RATES[p] !== undefined ? RATES[p] : Math.floor(p * 10);
-}
-
-function fmtMins(m) {
+const pesoToMins = p => RATES[p] ?? Math.floor(p * 10);
+const fmtMins = m => {
   if (m < 60) return `${m} min${m !== 1 ? 's' : ''}`;
   const h = Math.floor(m / 60), r = m % 60;
   return `${h}h${r ? ' ' + r + 'min' : ''}`;
-}
+};
 
 // ── State ─────────────────────────────────────
 let freeTimer   = null;
 let freeLeft    = 180;
 let freeActive  = false;
 
-let sessionTimer = null;
-let sessionSecs  = 0;
+let sessionTimer    = null;
+let sessionSecs     = 0;
+let sessionSyncTimer = null;
 
-// GCash QR state
-let gcashAmount  = 0;   // pesos selected/entered
-let gcashMinutes = 0;   // computed minutes
-let gcashLabel   = '';  // e.g. "2 hrs"
+let gcashAmount  = 0;
+let gcashMinutes = 0;
+let gcashLabel   = '';
 
-// Coin state
 let coinTotal = 0;
 let coinLog   = [];
 
-// ══════════════════════════════════════════════
-// NAVIGATION
-// ══════════════════════════════════════════════
+// ── Navigation ─────────────────────────────────
 function goTo(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
@@ -45,40 +52,33 @@ function goTo(id) {
 }
 
 // ══════════════════════════════════════════════
-// FREE 3-MINUTE TIMER
-// Starts when user enters GCash screen.
-// Keeps running if user goes back to home and
-// re-enters — only resets on expiry or payment.
+// FREE TIMER  (3 min GCash payment window)
+// Persists across back-navigation — only resets
+// on expiry or successful payment.
 // ══════════════════════════════════════════════
 function startFreeTimer() {
-  if (freeActive) return; // already ticking
+  if (freeActive) return;
   freeActive = true;
   freeLeft   = 180;
-  updateFreeDisplay();
-  freeTimer  = setInterval(tickFree, 1000);
+  _tickFree();
+  freeTimer = setInterval(_tickFree, 1000);
 }
 
-function tickFree() {
+function _tickFree() {
   freeLeft--;
-  updateFreeDisplay();
-  if (freeLeft <= 0) {
-    resetFreeTimer();
-    resetGcashFlow();
-    goTo('screen-home');
-    toast('⏱ Payment window expired. Please try again.');
-  }
-}
-
-function updateFreeDisplay() {
-  const m   = Math.floor(freeLeft / 60);
-  const s   = freeLeft % 60;
-  const str = `${m}:${s.toString().padStart(2, '0')}`;
+  const str = `${Math.floor(freeLeft/60)}:${String(freeLeft%60).padStart(2,'0')}`;
   ['freeValGcash', 'overlayFreeVal'].forEach(id => {
     const el = document.getElementById(id);
     if (!el) return;
     el.textContent = str;
     el.classList.toggle('urgent', freeLeft <= 30);
   });
+  if (freeLeft <= 0) {
+    _resetFreeTimer();
+    _cancelGcashState();
+    goTo('screen-home');
+    toast('⏱ Payment window expired. Please try again.');
+  }
 }
 
 function stopFreeTimer() {
@@ -86,7 +86,7 @@ function stopFreeTimer() {
   freeActive = false;
 }
 
-function resetFreeTimer() {
+function _resetFreeTimer() {
   stopFreeTimer();
   freeLeft = 180;
   ['freeValGcash', 'overlayFreeVal'].forEach(id => {
@@ -95,309 +95,340 @@ function resetFreeTimer() {
   });
 }
 
+function _cancelGcashState() {
+  gcashAmount = 0; gcashMinutes = 0; gcashLabel = '';
+  document.querySelectorAll('.gcash-rate').forEach(c => c.classList.remove('selected'));
+  const inp = document.getElementById('customAmountInput');
+  if (inp) inp.value = '';
+  const prev = document.getElementById('customAmountPreview');
+  if (prev) prev.textContent = '';
+  const btn = document.getElementById('openGcashBtn');
+  if (btn) { btn.disabled = true; btn.textContent = '📱 Open GCash App to Pay'; }
+  const refCard = document.getElementById('gcashStep3');
+  if (refCard) refCard.style.display = 'none';
+  const refInput = document.getElementById('refInput');
+  if (refInput) refInput.value = '';
+  _showGcashStep(1);
+}
+
+// Navigate home but keep timer running
+function cancelGcash() {
+  _cancelGcashState();
+  goTo('screen-home');
+}
+
 // ══════════════════════════════════════════════
 // GCASH QR FLOW
 // ══════════════════════════════════════════════
 function startGcash() {
-  resetGcashFlow();
+  _cancelGcashState();
   goTo('screen-gcash');
-  startFreeTimer(); // starts fresh OR continues if already counting
+  startFreeTimer();
 }
 
-function cancelGcash() {
-  // Go home but keep timer running — user can re-enter within window
-  resetGcashFlow();
-  goTo('screen-home');
-}
-
-function resetGcashFlow() {
-  // Reset amount selection
-  gcashAmount  = 0;
-  gcashMinutes = 0;
-  gcashLabel   = '';
-
-  // Deselect rate cards
-  document.querySelectorAll('.gcash-rate-card').forEach(c => c.classList.remove('selected'));
-
-  // Clear custom input
-  const inp = document.getElementById('customAmountInput');
-  if (inp) inp.value = '';
-  const preview = document.getElementById('customAmountPreview');
-  if (preview) preview.textContent = '';
-
-  // Disable open gcash button
-  const openBtn = document.getElementById('openGcashBtn');
-  if (openBtn) openBtn.disabled = true;
-
-  // Hide steps 2 & 3, show step 1
-  showGcashStep(1);
-
-  // Clear ref input
-  const ref = document.getElementById('refInput');
-  if (ref) ref.value = '';
-  const confirmBtn = document.getElementById('confirmPayBtn');
-  if (confirmBtn) confirmBtn.disabled = true;
-  const refErr = document.getElementById('refError');
-  if (refErr) refErr.style.display = 'none';
-}
-
-function showGcashStep(step) {
-  document.getElementById('gcashStep1').style.display = step >= 1 ? 'block' : 'none';
+function _showGcashStep(step) {
+  document.getElementById('gcashStep1').style.display = 'block';
   document.getElementById('gcashStep2').style.display = step >= 2 ? 'block' : 'none';
   document.getElementById('gcashStep3').style.display = step >= 3 ? 'block' : 'none';
 }
 
-// Called when a rate card is clicked
+// Rate card selected
 function selectGcashRate(card) {
-  document.querySelectorAll('.gcash-rate-card').forEach(c => c.classList.remove('selected'));
+  document.querySelectorAll('.gcash-rate').forEach(c => c.classList.remove('selected'));
   card.classList.add('selected');
-
   gcashAmount  = parseInt(card.dataset.pesos);
   gcashMinutes = parseInt(card.dataset.minutes);
   gcashLabel   = card.dataset.label;
-
-  // Clear custom input when rate card is selected
+  // Clear custom input
   const inp = document.getElementById('customAmountInput');
   if (inp) inp.value = '';
   document.getElementById('customAmountPreview').textContent = '';
-
-  enableOpenGcash();
+  _updateOpenBtn();
 }
 
-// Called on custom amount input
-function onCustomAmountChange() {
-  const inp = document.getElementById('customAmountInput');
-  const val = Math.floor(parseFloat(inp.value));
-  const preview = document.getElementById('customAmountPreview');
-
-  if (isNaN(val) || val < 1) {
-    gcashAmount  = 0;
-    gcashMinutes = 0;
-    gcashLabel   = '';
-    preview.textContent = '';
-    document.getElementById('openGcashBtn').disabled = true;
-
-    // Deselect rate cards only if user cleared input
-    if (inp.value === '') return;
+// Custom amount typed
+function onCustomAmount() {
+  const val = Math.floor(parseFloat(document.getElementById('customAmountInput').value));
+  const prev = document.getElementById('customAmountPreview');
+  document.querySelectorAll('.gcash-rate').forEach(c => c.classList.remove('selected'));
+  if (!val || val < 1) {
+    gcashAmount = 0; gcashMinutes = 0; gcashLabel = '';
+    prev.textContent = '';
+    _updateOpenBtn();
     return;
   }
-
-  // Deselect rate cards when custom is entered
-  document.querySelectorAll('.gcash-rate-card').forEach(c => c.classList.remove('selected'));
-
   gcashAmount  = val;
   gcashMinutes = pesoToMins(val);
   gcashLabel   = fmtMins(gcashMinutes);
-
-  preview.textContent = `₱${val} = ${fmtMins(gcashMinutes)} of internet access`;
-  enableOpenGcash();
+  prev.textContent = `₱${val} = ${gcashLabel} of internet access`;
+  _updateOpenBtn();
 }
 
-function enableOpenGcash() {
+function _updateOpenBtn() {
   const btn = document.getElementById('openGcashBtn');
   btn.disabled = gcashAmount < 1;
-  if (gcashAmount >= 1) {
-    btn.textContent = `📱 Open GCash App — Pay ₱${gcashAmount}`;
-  } else {
-    btn.textContent = '📱 Open GCash App to Pay';
-  }
+  btn.textContent = gcashAmount >= 1
+    ? `📱 Open GCash App — Pay ₱${gcashAmount}`
+    : '📱 Open GCash App to Pay';
 }
 
-// User taps "Open GCash App to Pay"
+// "Open GCash App" button
 function openGcashApp() {
   if (gcashAmount < 1) return;
 
-  // Update step 2 display
-  document.getElementById('qrAmountLabel').textContent   = `₱${gcashAmount}`;
-  document.getElementById('amountToSend').textContent    = `₱${gcashAmount}`;
-  document.getElementById('amountToSendTime').textContent = `${fmtMins(gcashMinutes)} of internet access`;
+  document.getElementById('qrAmountLabel').textContent  = `₱${gcashAmount}`;
+  document.getElementById('amountToSend').textContent   = `₱${gcashAmount}`;
+  document.getElementById('amountToSendTime').textContent = `${gcashLabel} of internet access`;
 
-  // Show step 2 (QR code)
-  showGcashStep(2);
+  _showGcashStep(2);
   document.getElementById('gcashStep2').scrollIntoView({ behavior: 'smooth' });
 
-  // Open GCash deep link — this opens the GCash app on mobile
-  // The deep link is allowed by the router during the free window
-  window.location.href = 'gcash://send';
-}
-
-// User taps "I've Sent the Payment" — show ref input
-function showRefInput() {
-  showGcashStep(3); // shows all 3 steps
-  document.getElementById('gcashStep3').scrollIntoView({ behavior: 'smooth' });
-}
-
-// Live validation of reference number input
-function onRefInput() {
-  const val = document.getElementById('refInput').value.trim();
-  const btn = document.getElementById('confirmPayBtn');
-  const err = document.getElementById('refError');
-
-  if (val.length >= 6) {
-    btn.disabled = false;
-    err.style.display = 'none';
+  // Deep link — opens GCash app on mobile, silently fails on desktop
+  const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+  if (isMobile) {
+    // Hidden iframe keeps page open while attempting app launch
+    const f = document.createElement('iframe');
+    f.style.display = 'none';
+    document.body.appendChild(f);
+    f.src = 'gcash://send';
+    setTimeout(() => f.remove(), 2000);
   } else {
-    btn.disabled = true;
+    // Desktop: update button to inform user
+    const btn = document.getElementById('deepLinkBtn');
+    if (btn) {
+      btn.style.opacity = '0.6';
+      btn.innerHTML = '🖥️ Use your phone to scan the QR';
+      btn.removeAttribute('href');
+    }
+    toast('📱 Use your phone to scan the QR code and pay.');
   }
 }
 
-// User taps "Confirm & Connect"
-function confirmGcashPayment() {
-  const ref = document.getElementById('refInput').value.trim();
+// "I've Sent the Payment" button
+function showRefInput() {
+  _showGcashStep(3);
+  document.getElementById('gcashStep3').scrollIntoView({ behavior: 'smooth' });
+}
+
+// Reference number input live validation
+function onRefInput() {
+  const val = document.getElementById('refInput').value.trim();
+  document.getElementById('confirmPayBtn').disabled = val.length < 6;
+  if (val.length >= 6) document.getElementById('refError').style.display = 'none';
+}
+
+// "Confirm & Connect" button
+async function confirmGcashPayment() {
+  const ref = document.getElementById('refInput').value.trim().toUpperCase();
   if (ref.length < 6) {
     document.getElementById('refError').style.display = 'block';
     return;
   }
 
-  // Grant session immediately — operator verifies ref via GCash inbox
-  resetFreeTimer();
-  startSession(
-    gcashMinutes,
-    `₱${gcashAmount} — ${gcashLabel}`,
-    `GCash QR · Ref: ${ref.toUpperCase()}`
-  );
-  resetGcashFlow();
+  const btn = document.getElementById('confirmPayBtn');
+  btn.disabled = true;
+  btn.textContent = '⏳ Connecting…';
+
+  try {
+    const res  = await fetch(`${API}/gcash`, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ amount: gcashAmount, refNumber: ref })
+    });
+    const data = await res.json();
+    if (!data.success) throw new Error(data.message || 'Server error');
+
+    _resetFreeTimer();
+    _startSession(data.minutes, `₱${gcashAmount} — ${gcashLabel}`, `GCash QR · Ref: ${ref}`);
+    _cancelGcashState();
+
+  } catch (err) {
+    console.warn('GCash API error — granting locally:', err.message);
+    // Fallback: grant locally if backend unreachable
+    _resetFreeTimer();
+    _startSession(gcashMinutes, `₱${gcashAmount} — ${gcashLabel}`, `GCash QR · Ref: ${ref}`);
+    _cancelGcashState();
+    toast('⚠️ Granted locally. Contact operator if there are issues.');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '🚀 Confirm & Connect';
+  }
 }
 
 // ══════════════════════════════════════════════
 // COIN SLOT
+// Real coins: gpio-reader.py → POST /api/coin (auto)
+// Simulator buttons: POST /api/coin (dev testing)
 // ══════════════════════════════════════════════
-const VALID_COINS = [1, 5, 10, 20];
+const VALID = [1, 5, 10, 20];
 
 function insertCoin(amount) {
-  const invalidNotice = document.getElementById('invalidNotice');
-  invalidNotice.style.display = 'none';
+  document.getElementById('invalidNotice').style.display = 'none';
 
-  if (amount === 'invalid' || !VALID_COINS.includes(Number(amount))) {
-    animateCoin(true);
-    ledFlash('#F87171');
-    setMachineScreen('INVALID', '#F87171');
-    invalidNotice.style.display = 'block';
+  if (amount === 'invalid' || !VALID.includes(Number(amount))) {
+    _coinAnim(true);
+    _ledFlash('#F87171');
+    _setScreen('INVALID', '#F87171');
+    document.getElementById('invalidNotice').style.display = 'block';
     setTimeout(() => {
-      setMachineScreen(coinTotal > 0 ? `₱${coinTotal}` : 'READY', '#4ADE80');
-      invalidNotice.style.display = 'none';
+      _setScreen(coinTotal > 0 ? `₱${coinTotal}` : 'READY', '#4ADE80');
+      document.getElementById('invalidNotice').style.display = 'none';
     }, 2400);
     return;
   }
 
-  coinTotal += Number(amount);
-  coinLog.push({ amount: Number(amount), time: new Date().toLocaleTimeString() });
-
-  animateCoin(false);
-  ledFlash('#FCD34D');
-  setMachineScreen(`₱${coinTotal}`, '#4ADE80');
-  refreshCoinUI();
+  const n   = Number(amount);
+  coinTotal += n;
+  coinLog.push({ amount: n, time: new Date().toLocaleTimeString() });
+  _coinAnim(false);
+  _ledFlash('#FCD34D');
+  _setScreen(`₱${coinTotal}`, '#4ADE80');
+  _refreshCoinUI();
 }
 
-function setMachineScreen(text, color) {
-  const el = document.getElementById('machineScreen');
-  el.textContent  = text;
-  el.style.color  = color;
-}
-
-function refreshCoinUI() {
+function _refreshCoinUI() {
   const mins = pesoToMins(coinTotal);
-
-  document.getElementById('coinTotalVal').textContent  = `₱${coinTotal}`;
-  document.getElementById('coinPreview').innerHTML     = coinTotal > 0
+  document.getElementById('coinTotalVal').textContent = `₱${coinTotal}`;
+  document.getElementById('coinPreview').innerHTML    = coinTotal > 0
     ? `You will get <b>${fmtMins(mins)}</b> of internet access`
     : 'Insert a coin to start';
 
-  const connectWrap = document.getElementById('coinConnectWrap');
+  const wrap = document.getElementById('coinConnectWrap');
   if (coinTotal > 0) {
-    connectWrap.style.display = 'block';
+    wrap.style.display = 'block';
     document.getElementById('coinConnectLabel').textContent = fmtMins(mins);
   } else {
-    connectWrap.style.display = 'none';
+    wrap.style.display = 'none';
   }
 
-  // Coin log
   const logWrap = document.getElementById('coinLogWrap');
   const logEl   = document.getElementById('coinLog');
-  if (coinLog.length === 0) { logWrap.style.display = 'none'; return; }
+  if (!coinLog.length) { logWrap.style.display = 'none'; return; }
   logWrap.style.display = 'block';
   logEl.innerHTML = [...coinLog].reverse().map(e =>
-    `<div class="cle">
-      <span>₱${e.amount} coin inserted</span>
-      <span class="cle-t">${e.time}</span>
-    </div>`
+    `<div class="cle"><span>₱${e.amount} coin inserted</span><span class="cle-t">${e.time}</span></div>`
   ).join('');
 }
 
-function connectWithCoin() {
-  const mins  = pesoToMins(coinTotal);
-  const label = `₱${coinTotal} total — ${fmtMins(mins)}`;
-  startSession(mins, label, 'Coin Slot');
+async function connectWithCoin() {
+  if (coinTotal < 1) return;
+
+  const btn = document.getElementById('coinConnectBtn');
+  btn.disabled = true;
+  btn.textContent = '⏳ Connecting…';
+
+  const total = coinTotal;
+  const mins  = pesoToMins(total);
+  const label = `₱${total} total — ${fmtMins(mins)}`;
+
+  try {
+    // POST to backend → Orange Pi → WifiSoft grants access
+    const res  = await fetch(`${API}/coin`, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ amount: total })
+    });
+    const data = await res.json();
+    if (!data.success) throw new Error(data.message);
+    _startSession(data.minutes, label, 'Coin Slot');
+
+  } catch (err) {
+    console.warn('Coin API error — granting locally:', err.message);
+    _startSession(mins, label, 'Coin Slot (local)');
+    toast('⚠️ Running in local mode. Check Orange Pi connection.');
+  }
+
   resetCoin(true);
+  btn.disabled = false;
+  btn.textContent = `🚀 Connect Now · —`;
 }
 
 function resetCoin(silent = false) {
   coinTotal = 0;
   coinLog   = [];
-  refreshCoinUI();
-  setMachineScreen('READY', '#4ADE80');
+  _refreshCoinUI();
+  _setScreen('READY', '#4ADE80');
   document.getElementById('invalidNotice').style.display = 'none';
   if (!silent) goTo('screen-home');
 }
 
-function animateCoin(invalid) {
-  const machine = document.getElementById('coinMachine');
-  const coin    = document.createElement('div');
+function _coinAnim(invalid) {
+  const m    = document.getElementById('coinMachine');
+  const coin = document.createElement('div');
   coin.className = 'coin-anim';
   if (invalid) coin.style.background = 'linear-gradient(135deg,#94A3B8,#64748B)';
-  machine.appendChild(coin);
+  m.appendChild(coin);
   setTimeout(() => coin.remove(), 950);
 }
 
-function ledFlash(color) {
+function _ledFlash(color) {
   const led = document.getElementById('machineLed');
   led.style.background = color;
   led.style.boxShadow  = `0 0 14px ${color}`;
   setTimeout(() => { led.style.background = ''; led.style.boxShadow = ''; }, 700);
 }
 
+function _setScreen(text, color) {
+  const el = document.getElementById('machineScreen');
+  el.textContent = text;
+  el.style.color = color;
+}
+
 // ══════════════════════════════════════════════
 // SESSION TIMER
-// Time stacks if session already running
+// Stacks time on existing sessions.
+// Polls backend every 5s to stay in sync with
+// Orange Pi WifiSoft session state.
 // ══════════════════════════════════════════════
-function startSession(minutes, label, method) {
-  const isAddOn = sessionTimer !== null;
+function _startSession(minutes, label, method) {
+  const isAddon = sessionTimer !== null;
+  sessionSecs = isAddon ? sessionSecs + minutes * 60 : minutes * 60;
 
-  if (isAddOn) {
-    sessionSecs += minutes * 60;
-  } else {
-    sessionSecs = minutes * 60;
-  }
-
-  document.getElementById('connDesc').textContent =
-    isAddOn ? `Added ${fmtMins(minutes)}. Keep browsing!` : `Enjoy ${fmtMins(minutes)} of internet!`;
+  document.getElementById('connDesc').textContent  =
+    isAddon ? `Added ${fmtMins(minutes)}. Keep browsing!` : `Enjoy ${fmtMins(minutes)} of internet!`;
   document.getElementById('sessInfo1').textContent = `Plan: ${label}`;
   document.getElementById('sessInfo2').textContent = `Method: ${method}`;
 
-  tickSession();
+  _tickSession();
   goTo('screen-connected');
 
-  if (!isAddOn) {
+  if (!isAddon) {
     sessionTimer = setInterval(() => {
       sessionSecs--;
-      tickSession();
+      _tickSession();
       if (sessionSecs <= 0) {
         clearInterval(sessionTimer);
         sessionTimer = null;
+        if (sessionSyncTimer) { clearInterval(sessionSyncTimer); sessionSyncTimer = null; }
         goTo('screen-home');
         toast('⏱ Session ended. Thank you for using CIT Piso WiFi!');
       }
     }, 1000);
+
+    // Sync with backend every 5s (keeps timer accurate after refresh)
+    if (sessionSyncTimer) clearInterval(sessionSyncTimer);
+    sessionSyncTimer = setInterval(_syncSession, 5000);
   }
 }
 
-function tickSession() {
+function _tickSession() {
   const h = Math.floor(sessionSecs / 3600);
   const m = Math.floor((sessionSecs % 3600) / 60);
   const s = sessionSecs % 60;
   document.getElementById('timerDisplay').textContent = h > 0
-    ? `${h}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`
-    : `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+    ? `${h}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`
+    : `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+}
+
+async function _syncSession() {
+  try {
+    const res  = await fetch(`${API}/session`);
+    const data = await res.json();
+    if (data.active && data.remainingSecs > 0) {
+      // Correct local timer to match backend
+      sessionSecs = data.remainingSecs;
+    }
+  } catch (_) { /* network hiccup — keep local timer */ }
 }
 
 // ── Restricted overlay ─────────────────────────
@@ -409,54 +440,89 @@ function closeRestricted() {
 function toast(msg) {
   const t = document.createElement('div');
   t.style.cssText = [
-    'position:fixed', 'bottom:20px', 'left:50%',
-    'transform:translateX(-50%)', 'background:#0A1628',
-    'color:white', 'padding:11px 18px', 'border-radius:12px',
-    'font-size:0.83rem', 'font-weight:500', 'z-index:99999',
-    'max-width:340px', 'text-align:center',
+    'position:fixed','bottom:20px','left:50%',
+    'transform:translateX(-50%)','background:#0A1628',
+    'color:white','padding:11px 18px','border-radius:12px',
+    'font-size:0.83rem','font-weight:500','z-index:99999',
+    'max-width:340px','text-align:center',
     'box-shadow:0 6px 20px rgba(0,0,0,0.3)'
   ].join(';');
   t.textContent = msg;
   document.body.appendChild(t);
-  setTimeout(() => t.remove(), 4000);
+  setTimeout(() => t.remove(), 4500);
 }
 
 // ══════════════════════════════════════════════
-// INIT — wire all event listeners on DOM ready
+// SESSION RESTORE ON PAGE LOAD
+// If Orange Pi has an active session for this
+// device, restore the timer automatically.
+// ══════════════════════════════════════════════
+async function restoreSession() {
+  try {
+    const res  = await fetch(`${API}/session`);
+    const data = await res.json();
+    if (data.active && data.remainingSecs > 0) {
+      console.log(`🔄 Restoring session: ${data.remainingSecs}s remaining`);
+      sessionSecs = data.remainingSecs;
+      document.getElementById('connDesc').textContent  = 'Session restored — keep browsing!';
+      document.getElementById('sessInfo1').textContent = `Plan: ${data.pesos ? `₱${data.pesos}` : '—'}`;
+      document.getElementById('sessInfo2').textContent = `Method: ${data.method || '—'}`;
+      _tickSession();
+      goTo('screen-connected');
+      sessionTimer = setInterval(() => {
+        sessionSecs--;
+        _tickSession();
+        if (sessionSecs <= 0) {
+          clearInterval(sessionTimer); sessionTimer = null;
+          if (sessionSyncTimer) { clearInterval(sessionSyncTimer); sessionSyncTimer = null; }
+          goTo('screen-home');
+          toast('⏱ Session ended. Thank you for using CIT Piso WiFi!');
+        }
+      }, 1000);
+      sessionSyncTimer = setInterval(_syncSession, 5000);
+    }
+  } catch (_) {
+    // Backend unreachable — show home screen normally
+  }
+}
+
+// ══════════════════════════════════════════════
+// INIT
 // ══════════════════════════════════════════════
 document.addEventListener('DOMContentLoaded', () => {
   console.log('✅ CIT Piso WiFi initialized');
 
-  // Home → GCash
+  // Try to restore an existing session on load
+  restoreSession();
+
+  // Home buttons
   document.getElementById('gcashBtn')
     ?.addEventListener('click', startGcash);
-
-  // Home → Coin Slot
   document.getElementById('coinBtn')
     ?.addEventListener('click', () => goTo('screen-coin'));
 
-  // GCash back button — keeps timer running
+  // GCash back button — keeps free timer running
   document.getElementById('gcashBackBtn')
     ?.addEventListener('click', cancelGcash);
 
   // GCash rate cards
-  document.querySelectorAll('.gcash-rate-card').forEach(card => {
+  document.querySelectorAll('.gcash-rate').forEach(card => {
     card.addEventListener('click', () => selectGcashRate(card));
   });
 
   // Custom amount input
   document.getElementById('customAmountInput')
-    ?.addEventListener('input', onCustomAmountChange);
+    ?.addEventListener('input', onCustomAmount);
 
   // Open GCash App button
   document.getElementById('openGcashBtn')
     ?.addEventListener('click', openGcashApp);
 
-  // "I've Sent" button → show ref input
+  // I've Sent button
   document.getElementById('showRefInputBtn')
     ?.addEventListener('click', showRefInput);
 
-  // Reference number input live validation
+  // Ref number input
   document.getElementById('refInput')
     ?.addEventListener('input', onRefInput);
 

@@ -1,42 +1,38 @@
-// ⚠️ dotenv MUST be loaded FIRST — before any other require()
-// Otherwise routes/payment.js reads process.env before .env is parsed
+// ============================================================
+// CIT Piso WiFi — Backend Server
+// Hardware: Orange Pi One + NAEK WifiSoft DIY Kit
+// ============================================================
 require('dotenv').config();
 
 const express = require('express');
-const cors = require('cors');
-const helmet = require('helmet');
-const paymentRoutes = require('./routes/payment');
+const cors    = require('cors');
+const helmet  = require('helmet');
 
 const app = express();
 
-app.use(helmet());
+app.use(helmet({ contentSecurityPolicy: false }));
 app.use(cors());
 app.use(express.json());
 
-// Serve frontend static files
+// Serve frontend files
 app.use(express.static('../frontend'));
 
-// API Routes
-app.use('/api', paymentRoutes);
+// Routes
+app.use('/api', require('./routes/coin'));
 
 // Health check
 app.get('/api/health', (req, res) => {
   res.json({
-    status: 'online',
-    message: 'PISO WIFI Backend is running',
-    time: new Date().toISOString()
+    status:   'online',
+    hardware: 'Orange Pi One · NAEK WifiSoft',
+    time:     new Date().toISOString()
   });
 });
 
 const PORT = process.env.PORT || 3000;
-
 app.listen(PORT, () => {
-  console.log(`🚀 PISO WIFI Backend running on http://localhost:${PORT}`);
-  console.log(`🌐 Frontend available at http://localhost:${PORT}`);
-
-  if (process.env.PAYMONGO_SECRET_KEY) {
-    console.log('✅ PayMongo Secret Key loaded successfully');
-  } else {
-    console.error('❌ PAYMONGO_SECRET_KEY is missing — check your .env file');
-  }
+  console.log(`🚀 CIT Piso WiFi  →  http://localhost:${PORT}`);
+  console.log(`🔧 WifiSoft admin →  http://${process.env.WIFISOFT_HOST || '10.0.0.1'}/admin`);
+  console.log(`🪙 Coin endpoint  →  POST /api/coin`);
+  console.log(`💚 GCash endpoint →  POST /api/gcash`);
 });

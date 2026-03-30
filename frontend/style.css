@@ -146,3 +146,31 @@ body{display:flex;flex-direction:column;align-items:center;padding:0 0 60px}
 .restricted-overlay.show{display:flex}
 
 @media(max-width:380px){.card{padding:18px 14px}.brand-name{font-size:1.6rem}}
+
+/* ════════════════════════════════════════
+   GCASH QR ADDITIONS
+════════════════════════════════════════ */
+
+/* GCash QR method button color */
+.micon.gcashqr{background:linear-gradient(135deg,#00A94F,#007A3D)}
+.gcashqr-btn:hover{border-color:#00A94F;box-shadow:0 0 0 4px rgba(0,169,79,0.12)}
+.paymongo-btn:hover{border-color:var(--gcash);box-shadow:0 0 0 4px rgba(0,125,254,0.12)}
+
+/* GCash QR action button */
+.btn-gcashqr{background:linear-gradient(135deg,#00A94F,#007A3D);color:white;box-shadow:0 4px 16px rgba(0,169,79,0.3)}
+.btn-gcashqr:hover{transform:translateY(-1px);box-shadow:0 6px 22px rgba(0,169,79,0.4)}
+.btn-gcashqr:disabled{opacity:0.45;cursor:not-allowed;transform:none !important}
+
+/* QR code wrapper */
+.qr-wrapper{display:flex;flex-direction:column;align-items:center;background:linear-gradient(180deg,#F0FFF4,#DCFCE7);border-radius:16px;padding:20px 16px 14px;margin:16px 0;border:2px solid #86EFAC}
+.qr-label-top{font-size:0.72rem;font-weight:700;color:#15803D;text-transform:uppercase;letter-spacing:2px;margin-bottom:12px}
+.qr-placeholder{position:relative;display:flex;flex-direction:column;align-items:center;gap:8px}
+.qr-replace-hint{font-size:0.68rem;color:#DC2626;background:#FEF2F2;border:1px dashed #FCA5A5;border-radius:6px;padding:4px 8px;text-align:center;max-width:180px;line-height:1.4}
+.qr-account-name{font-family:'Syne',sans-serif;font-weight:700;font-size:0.9rem;color:#15803D;margin-top:8px;text-align:center}
+
+/* Reference number input */
+.ref-input-wrap{position:relative}
+.ref-input{width:100%;border:2px solid var(--border);border-radius:10px;padding:12px 14px;font-size:1rem;font-family:'Syne',sans-serif;font-weight:700;letter-spacing:1.5px;color:var(--text);background:white;outline:none;transition:border-color 0.2s;text-transform:uppercase}
+.ref-input:focus{border-color:#00A94F;box-shadow:0 0 0 3px rgba(0,169,79,0.12)}
+.ref-input::placeholder{font-weight:400;letter-spacing:0;text-transform:none;color:var(--muted)}
+.ref-error{font-size:0.8rem;color:var(--red);margin-top:6px;display:flex;align-items:center;gap:4px}

@@ -26,12 +26,29 @@
 #   sudo systemctl start pisowifi-gpio
 # ============================================================
 
-import OPi.GPIO as GPIO
-import requests
+import sys
 import time
 import threading
 import logging
-import sys
+import requests
+
+# OPi.GPIO is an Orange Pi / Linux-only library.
+# The Pylance warning in VS Code on Windows is expected and harmless —
+# this script only ever runs on the Orange Pi hardware, not your PC.
+try:
+    import OPi.GPIO as GPIO           # runs on Orange Pi  # type: ignore
+except ImportError:
+    # ── Mock GPIO for development on Windows/Mac ──────────────────────
+    # When running on your PC, GPIO calls are silently ignored.
+    # Real GPIO only activates on the Orange Pi.
+    class _MockGPIO:                  # type: ignore
+        BOARD = FALLING = IN = OUT = PUD_UP = None
+        def setmode(self, *a, **k): pass
+        def setup(self, *a, **k):   pass
+        def add_event_detect(self, *a, **k): pass
+        def cleanup(self):           pass
+    GPIO = _MockGPIO()
+    logging.warning('⚠️  OPi.GPIO not found — MOCK mode active (dev/Windows). GPIO coin detection disabled.')
 
 logging.basicConfig(
     level=logging.INFO,
